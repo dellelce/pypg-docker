@@ -1,0 +1,9 @@
+language: c
+notifications:
+   slack: skydreams:1FLUnEeqaNLinKq1p0lJf9F5
+services:
+ - docker
+env:
+ - BASE_IMAGE="dellelce/pgbase" TARGET_IMAGE="dellelce/pypg-client"
+script:
+ - ./main.sh
