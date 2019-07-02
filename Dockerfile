@@ -1,4 +1,4 @@
-# use  base (=raw from mkit) PostGreSQL & Python install to build the latest psycopg2
+# by default use pgbase (=raw from mkit) PostGreSQL & Python install to build the latest psycopg2
 ARG BASE=dellelce/pgbase
 FROM $BASE as build
 
@@ -40,20 +40,21 @@ RUN    apk add gcc bash wget perl perl-dev file xz make libc-dev linux-headers g
     && mkdir binaries \
     && mv *.whl binaries
 
+RUN ls -lt /app/pg/lib/libpq*so.*[1-9]
+
 #
 FROM dellelce/py-base as delivery
 
-# Use shared lib for now
+# Use shared lib for now, this should be embedded in the wheel
 COPY --from=pgbuild /app/pg/lib/libpq*so.*[1-9] ${INSTALLDIR}/lib/
 
 # "." is a Directory even if it does not end with "/", Dear Mr Docker.
-COPY --from=pgbuild /app/v/binaries ./
+COPY --from=pgbuild /app/v/binaries /wheel
 
 # note that variables are local to each "FROM"
 RUN    ${INSTALLDIR}/bin/pip3 install -q -U pip setuptools \
-    && ${INSTALLDIR}/bin/pip3 install *.whl \
+    && ${INSTALLDIR}/bin/pip3 install /wheel/*.whl \
     && ${INSTALLDIR}/bin/python3 -m pip list \
     && echo 'import psycopg2; print("And the pyscopg2 version is " + psycopg2.__version__);' | \
        ${INSTALLDIR}/bin/python3 \
-    && rm *.whl
 
